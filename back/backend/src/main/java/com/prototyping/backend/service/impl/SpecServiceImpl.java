@@ -45,7 +45,7 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         spec.setPid(node.get("pid").asInt());
         spec.setName(node.get("specName").asText());
         spec.setHeight(node.get("height").asInt());
-        spec.setWidth(node.get("weight").asInt());
+        spec.setWidth(node.get("width").asInt());
         LocalDateTime now = LocalDateTime.now();
         Timestamp timestamp = Timestamp.valueOf(now);
         spec.setCtime(timestamp);
@@ -69,20 +69,33 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
 
         int id = node.get("id").asInt();
 
-        JsonNode cells_node = node.get("cells");
-        System.out.println(cells_node);
-        String json_string = cells_node.toString();
-        System.out.println(json_string);
-        String json_data = JSON.toJSONString(json_string);
-        System.out.println(json_data);
+        JsonNode cells_node;
         String name;
+        int height;
+        int width;
         LambdaUpdateWrapper<Spec> lambdaUpdateWrapper = new LambdaUpdateWrapper();
         lambdaUpdateWrapper.eq(Spec::getId, id);
-        if (node.get("name") != null) {
+        if(node.get("name") != null) {
             name = node.get("name").asText();
             lambdaUpdateWrapper.set(Spec::getName, name);
         }
-        lambdaUpdateWrapper.set(Spec::getJsonData, json_data);
+        if(node.get("cells") != null){
+            cells_node = node.get("cells");
+            //System.out.println(cells_node);
+            String json_string = cells_node.toString();
+            //System.out.println(json_string);
+            String json_data = JSON.toJSONString(json_string);
+            //System.out.println(json_data);
+            lambdaUpdateWrapper.set(Spec::getJsonData, json_data);
+        }
+        if(node.get("height") != null){
+            height = node.get("height").asInt();
+            lambdaUpdateWrapper.set(Spec::getHeight, height);
+        }
+        if(node.get("width") != null){
+            width = node.get("width").asInt();
+            lambdaUpdateWrapper.set(Spec::getWidth, width);
+        }
         specMapper.update(null, lambdaUpdateWrapper);
     }
 
@@ -101,11 +114,6 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         JSONArray spec_res = new JSONArray();
         if (!specList.isEmpty()) {
             for (Spec spec : specList) {
-                String json_data = spec.getJsonData();
-                int length = json_data.length();
-                json_data = json_data.substring(1, length - 1);
-                json_data = json_data.replaceAll("\\\\", "");
-                JSONArray jsonArray = JSON.parseArray(json_data);
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("id", spec.getId());
                 jsonObject.put("pid", spec.getPid());
@@ -114,7 +122,17 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
                 jsonObject.put("width", spec.getWidth());
                 jsonObject.put("ctime", spec.getCtime());
                 jsonObject.put("utime", spec.getUtime());
-                jsonObject.put("json_data", jsonArray);
+                if(spec.getJsonData() != null){
+                    String json_data = spec.getJsonData();
+                    int length = json_data.length();
+                    json_data = json_data.substring(1, length - 1);
+                    json_data = json_data.replaceAll("\\\\", "");
+                    JSONArray jsonArray = JSON.parseArray(json_data);
+                    jsonObject.put("json_data", jsonArray);
+                }
+                else {
+                    jsonObject.put("json_data", null);
+                }
                 spec_res.add(jsonObject);
             }
             res.put("spec_data", spec_res);
@@ -129,11 +147,6 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         if(spec == null){
             return null;
         }
-        String json_data = spec.getJsonData();
-        int length = json_data.length();
-        json_data = json_data.substring(1, length - 1);
-        json_data = json_data.replaceAll("\\\\", "");
-        JSONArray jsonArray = JSON.parseArray(json_data);
 
         /*ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode jsonObject = objectMapper.createObjectNode();*/
@@ -145,7 +158,17 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         jsonObject.put("width", spec.getWidth());
         jsonObject.put("ctime", spec.getCtime());
         jsonObject.put("utime", spec.getUtime());
-        jsonObject.put("json_data", jsonArray);
+        if(spec.getJsonData() != null){
+            String json_data = spec.getJsonData();
+            int length = json_data.length();
+            json_data = json_data.substring(1, length - 1);
+            json_data = json_data.replaceAll("\\\\", "");
+            JSONArray jsonArray = JSON.parseArray(json_data);
+            jsonObject.put("json_data", jsonArray);
+        }
+        else {
+            jsonObject.put("json_data", null);
+        }
         //System.out.println(jsonObject);
 
         //JSONObject jsonObject = JSONObject.parseObject(spec.getJsonData());
@@ -153,7 +176,6 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         //JsonNode result = objectMapper.convertValue(jsonObject,JsonNode.class);
         return jsonObject;
     }
-
 
     @Override
     public void newSpec(Integer pid, String specName, Integer width, Integer height) {
