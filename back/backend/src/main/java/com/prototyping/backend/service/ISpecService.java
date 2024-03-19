@@ -12,9 +12,8 @@ public interface ISpecService extends IService<Spec> {
     Integer createSpec(Object data);
     void deleteSpec(Integer id);
     void updateSpec(Object data);
-    JSONArray getAllSpecs(Integer pid);
+    JSONObject getAllSpecs(Integer pid);
     JSONObject getSpec(Integer id);
-    JSONArray test();
     void newSpec(Integer pid, String specName, Integer width, Integer height);
     boolean isSpecExists(Integer pid);
 }

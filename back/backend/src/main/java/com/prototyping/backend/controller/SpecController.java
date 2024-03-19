@@ -64,6 +64,21 @@ public class SpecController {
         }
     }
 
+    @GetMapping("/getSpec")
+    public Result<Object> getSpec(Integer id){
+        try {
+            if(specService.getSpec(id) == null){
+                return Result.fail(500,"画布不存在");
+            }
+            else {
+                return Result.ok(specService.getAllSpecs(id), "ok");
+            }
+        } catch (Exception e){
+            log.error(e.getMessage());
+            return Result.fail();
+        }
+    }
+
     @PostMapping("/createSpecWithParams")
     public Result<Object> createSpecWithParams(Integer pid, String name, Integer width, Integer height){
         try {

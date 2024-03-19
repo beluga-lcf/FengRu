@@ -9,7 +9,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.prototyping.backend.entity.Project;
 import com.prototyping.backend.entity.Spec;
+import com.prototyping.backend.mapper.ProjectMapper;
 import com.prototyping.backend.mapper.SpecMapper;
 import com.prototyping.backend.service.ISpecService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +25,16 @@ import java.util.List;
 public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements ISpecService {
 
     private SpecMapper specMapper;
+    private ProjectMapper projectMapper;
 
     @Autowired
     public void setSpecMapper(SpecMapper specMapper) {
         this.specMapper = specMapper;
     }
-
+    @Autowired
+    public void setProjectMapper(ProjectMapper projectMapper){
+        this.projectMapper = projectMapper;
+    }
     @Override
     public Integer createSpec(Object data) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -38,6 +44,8 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         Spec spec = new Spec();
         spec.setPid(node.get("pid").asInt());
         spec.setName(node.get("specName").asText());
+        spec.setHeight(node.get("height").asInt());
+        spec.setWidth(node.get("weight").asInt());
         LocalDateTime now = LocalDateTime.now();
         Timestamp timestamp = Timestamp.valueOf(now);
         spec.setCtime(timestamp);
@@ -49,7 +57,6 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
 
     @Override
     public void deleteSpec(Integer id) {
-
         specMapper.deleteById(id);
     }
 
@@ -80,11 +87,18 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
     }
 
     @Override
-    public JSONArray getAllSpecs(Integer pid) {
+    public JSONObject getAllSpecs(Integer pid) {
         LambdaQueryWrapper<Spec> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(pid != null, Spec::getPid, pid);
+        Project project = projectMapper.selectById(pid);
+        JSONObject res = new JSONObject();
+        if(project == null){
+            return null;
+        }
+        //如果存在项目
+        res.put("project_name", project.getName());
         List<Spec> specList = specMapper.selectList(lambdaQueryWrapper);
-        JSONArray res = new JSONArray();
+        JSONArray spec_res = new JSONArray();
         if (!specList.isEmpty()) {
             for (Spec spec : specList) {
                 String json_data = spec.getJsonData();
@@ -96,20 +110,25 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
                 jsonObject.put("id", spec.getId());
                 jsonObject.put("pid", spec.getPid());
                 jsonObject.put("name", spec.getName());
+                jsonObject.put("height", spec.getHeight());
+                jsonObject.put("width", spec.getWidth());
                 jsonObject.put("ctime", spec.getCtime());
                 jsonObject.put("utime", spec.getUtime());
                 jsonObject.put("json_data", jsonArray);
-                res.add(jsonObject);
+                spec_res.add(jsonObject);
             }
-            return res;
+            res.put("spec_data", spec_res);
         }
-        else return null;
+        else res.put("spec_data", null);
+        return res;
     }
 
     @Override
     public JSONObject getSpec(Integer id) {
         Spec spec = specMapper.selectById(id);
-
+        if(spec == null){
+            return null;
+        }
         String json_data = spec.getJsonData();
         int length = json_data.length();
         json_data = json_data.substring(1, length - 1);
@@ -122,10 +141,12 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         jsonObject.put("id", spec.getId());
         jsonObject.put("pid", spec.getPid());
         jsonObject.put("name", spec.getName());
+        jsonObject.put("height", spec.getHeight());
+        jsonObject.put("width", spec.getWidth());
         jsonObject.put("ctime", spec.getCtime());
         jsonObject.put("utime", spec.getUtime());
         jsonObject.put("json_data", jsonArray);
-        System.out.println(jsonObject);
+        //System.out.println(jsonObject);
 
         //JSONObject jsonObject = JSONObject.parseObject(spec.getJsonData());
         //System.out.println(jsonObject);
@@ -133,18 +154,6 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         return jsonObject;
     }
 
-    @Override
-    public JSONArray test() {
-        String str = specMapper.selectById(2).getJsonData();
-        int length = str.length();
-        String test = str.substring(1, length - 1);
-        System.out.println("原字符串" + test);
-        test = test.replaceAll("\\\\", "");
-        System.out.println("现字符串" + test);
-        JSONArray jsonArray = JSON.parseArray(test);
-        System.out.println(jsonArray);
-        return jsonArray;
-    }
 
     @Override
     public void newSpec(Integer pid, String specName, Integer width, Integer height) {
