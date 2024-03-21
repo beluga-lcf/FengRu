@@ -71,7 +71,7 @@ public class SpecController {
                 return Result.fail(500,"画布不存在");
             }
             else {
-                return Result.ok(specService.getAllSpecs(id), "ok");
+                return Result.ok(specService.getSpec(id), "ok");
             }
         } catch (Exception e){
             log.error(e.getMessage());
