@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface ISpecService extends IService<Spec> {
     Integer createSpec(Object data);
-    void deleteSpec(Integer id);
-    void updateSpec(Object data);
+    Integer deleteSpec(Object data);
+    Integer updateSpec(Object data);
     JSONObject getAllSpecs(Integer pid);
     JSONObject getSpec(Integer id);
     void newSpec(Integer pid, String specName, Integer width, Integer height);

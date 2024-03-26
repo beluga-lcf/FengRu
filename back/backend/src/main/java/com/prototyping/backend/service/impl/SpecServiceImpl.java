@@ -52,22 +52,39 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
         spec.setUtime(timestamp);
         spec.setIsDeleted(0);
         specMapper.insert(spec);
-        return 0;
+        return spec.getId();
     }
 
     @Override
-    public void deleteSpec(Integer id) {
-        specMapper.deleteById(id);
+    public Integer deleteSpec(Object data) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode node = objectMapper.convertValue(data, ObjectNode.class);
+        System.out.println(node);
+        if(node.get("id") != null){
+            int id = node.get("id").asInt();
+            specMapper.deleteById(id);
+            return 0;
+        }
+        else{
+            return 1;
+        }
     }
 
     @Override
-    public void updateSpec(Object data) {
+    public Integer updateSpec(Object data) {
         ObjectMapper objectMapper = new ObjectMapper();
         //ObjectNode node = objectMapper.convertValue(data, ObjectNode.class);
         JsonNode node = objectMapper.convertValue(data, JsonNode.class);
         System.out.println(node);
 
+        if(node.get("id") == null){
+            return 1;
+        }
         int id = node.get("id").asInt();
+        Spec spec = specMapper.selectById(id);
+        if(spec == null){
+            return 2;
+        }
 
         JsonNode cells_node;
         String name;
@@ -97,6 +114,7 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements IS
             lambdaUpdateWrapper.set(Spec::getWidth, width);
         }
         specMapper.update(null, lambdaUpdateWrapper);
+        return 0;
     }
 
     @Override

@@ -28,10 +28,14 @@ public class SpecController {
     }
 
     @PostMapping("/deleteSpec")
-    public Result<Object> deleteSpec(Integer id){
+    public Result<Object> deleteSpec(@RequestBody Object data){
         try {
-            specService.deleteSpec(id);
-            return Result.ok(null, "ok");
+            if(specService.deleteSpec(data) == 0){
+                return Result.ok(null, "删除画布成功");
+            }
+            else{
+                return Result.fail("请传入正确的画布id");
+            }
         } catch (Exception e) {
             log.error(e.getMessage());
             return Result.fail();
@@ -41,8 +45,16 @@ public class SpecController {
     @PostMapping("/updateSpec")
     public Result<Object> updateSpec(@RequestBody Object data){
         try {
-            specService.updateSpec(data);
-            return Result.ok(null, "ok");
+            int res = specService.updateSpec(data);
+            if(res == 0){
+                return Result.ok(null, "ok");
+            }
+            else if(res == 1){
+                return Result.fail("请传入正确的画布id");
+            }
+            else{
+                return Result.fail("当前画布已经被删除，无法进行更新");
+            }
         } catch (Exception e){
             log.error(e.getMessage());
             return Result.fail();
